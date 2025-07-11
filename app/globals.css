@@ -1,3 +1,75 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* 1) Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;700&family=Open+Sans:wght@400;700&display=swap');
+
+/* 2) CSS dəyişənləri (coffee-palitra) */
+:root {
+  --coffee-cream:  #f3ece0;
+  --coffee-brown:  #4b2e2b;
+  --coffee-dark:   #3b1f1e;
+  --coffee-light:  #c9b29b;
+  --font-heading:  'Lora', serif;
+  --font-body:     'Open Sans', sans-serif;
+}
+
+/* 3) Qlobal reset / Base stillər */
+html {
+  font-family: var(--font-body);
+  background-color: var(--coffee-cream);
+  color: var(--coffee-dark);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+/* 4) Header / Navbar */
+header {
+  background-color: var(--coffee-brown);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+header .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+}
+header a {
+  color: var(--coffee-cream);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color .2s;
+}
+header a:hover {
+  color: var(--coffee-light);
+}
+header .logo {
+  display: flex;
+  align-items: center;
+  font-size: 1.75rem;
+  font-family: var(--font-heading);
+}
+
+/* 5) Footer */
+footer {
+  background-color: var(--coffee-brown);
+  color: var(--coffee-cream);
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.875rem;
+}
+
+/* 6) Utility komponent nümunələri */
+.btn-primary {
+  background-color: var(--coffee-brown);
+  color: var(--coffee-cream);
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  font-family: var(--font-body);
+  transition: background-color .2s;
+}
+.btn-primary:hover {
+  background-color: var(--coffee-dark);
+}
