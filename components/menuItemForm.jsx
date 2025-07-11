@@ -8,14 +8,15 @@ export default function MenuItemForm({ initialData }) {
   const router    = useRouter()
   const isEditing = Boolean(initialData)
 
-  const [name, setName]           = useState(initialData?.name || '')
+  // Form sahələri və statuslar
+  const [name, setName]             = useState(initialData?.name || '')
   const [description, setDescription] = useState(initialData?.description || '')
-  const [price, setPrice]         = useState(initialData?.price || '')
-  const [loading, setLoading]     = useState(false)
+  const [price, setPrice]           = useState(initialData?.price || '')
+  const [file, setFile]             = useState(null)
+  const [loading, setLoading]       = useState(false)
+  const [errorMsg, setErrorMsg]     = useState('')
 
-  // Yeni state upload üçün
-  const [file, setFile]           = useState(null)
-
+  // Fayl seçiləndə state-ə yazırıq
   const handleFileChange = (e) => {
     setFile(e.target.files[0] ?? null)
   }
@@ -23,28 +24,32 @@ export default function MenuItemForm({ initialData }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
+    setErrorMsg('')
 
+    // Əvvəlki image URL-i götür, yoxdursa null
     let imageUrl = initialData?.image || null
 
-    // Əgər yeni file seçilibsə, onu bucket-a yüklə
+    // Yeni fayl seçilibsə, onu Storage bucket-a yüklə
     if (file) {
-      const fileExt = file.name.split('.').pop()
+      const fileExt  = file.name.split('.').pop()
       const fileName = `${Date.now()}.${fileExt}`
       const filePath = `menu_items/${fileName}`
 
-      // bucket adı: 'images' → öz bucket adınla əvəz et
       const { error: uploadError } = await supabase
         .storage
-        .from('images')
-        .upload(filePath, file, { cacheControl: '3600', upsert: false })
+        .from('images')                   // bucket adı: 'images'
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        })
 
       if (uploadError) {
-        console.error('Upload error:', uploadError)
+        setErrorMsg(uploadError.message)
         setLoading(false)
         return
       }
 
-      // Public URL əldə et
+      // Public URL al
       const { data } = supabase
         .storage
         .from('images')
@@ -53,17 +58,39 @@ export default function MenuItemForm({ initialData }) {
       imageUrl = data.publicUrl
     }
 
-    const payload = { name, description, image: imageUrl, price: parseFloat(price) }
+    // DB-yə insert/update üçün payload
+    const payload = {
+      name,
+      description,
+      image: imageUrl,
+      price: parseFloat(price)
+    }
 
+    // Update yoxsa Insert?
     if (isEditing) {
-      await supabase
+      const { error: upErr } = await supabase
         .from('menu_items')
         .update(payload)
         .eq('id', initialData.id)
+
+      if (upErr) {
+        setErrorMsg(upErr.message)
+        setLoading(false)
+        return
+      }
     } else {
-      await supabase.from('menu_items').insert([payload])
+      const { error: insErr } = await supabase
+        .from('menu_items')
+        .insert([payload])
+
+      if (insErr) {
+        setErrorMsg(insErr.message)
+        setLoading(false)
+        return
+      }
     }
 
+    // Uğurla tamamlandı → admin səhifəsinə yönləndir
     setLoading(false)
     router.push('/admin/menu_items')
   }
@@ -81,6 +108,11 @@ export default function MenuItemForm({ initialData }) {
         space-y-6
       "
     >
+      {/* Supabase xətalarını göstər */}
+      {errorMsg && (
+        <p className="text-sm text-red-600">{errorMsg}</p>
+      )}
+
       {/* Name */}
       <div>
         <label className="block text-sm font-medium text-[var(--coffee-dark)] mb-1">
@@ -132,12 +164,11 @@ export default function MenuItemForm({ initialData }) {
           onChange={handleFileChange}
           className="
             block w-full 
-            text-sm 
-            text-gray-700 
-            file:mr-4 file:py-2 file:px-4
-            file:rounded file:border-0
-            file:text-sm file:font-semibold
-            file:bg-[var(--coffee-brown)] file:text-[var(--coffee-cream)]
+            text-sm text-gray-700 
+            file:mr-4 file:py-2 file:px-4 
+            file:rounded file:border-0 
+            file:text-sm file:font-semibold 
+            file:bg-[var(--coffee-brown)] file:text-[var(--coffee-cream)] 
             hover:file:bg-[var(--coffee-dark)]
           "
         />

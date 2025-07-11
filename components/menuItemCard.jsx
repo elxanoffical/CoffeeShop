@@ -11,7 +11,7 @@ export default function MenuItemCard({ item, onOrder }) {
       flex flex-col 
       shadow-sm 
       hover:shadow-lg 
-      transition-shadow duration-200
+      transition-shadow duration-200 cursor-pointer
     ">
       {item.image && (
         <div className="h-48 relative">
