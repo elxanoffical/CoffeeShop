@@ -1,8 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;700&family=Open+Sans:wght@400;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* 1) Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;700&family=Open+Sans:wght@400;700&display=swap');
 
 /* 2) CSS dəyişənləri (coffee-palitra) */
 :root {

@@ -1,18 +1,21 @@
-// components/Navbar.jsx
+// components/NavBar.jsx
 import Link from 'next/link'
 
-export default function Navbar() {
+export default function NavBar() {
   return (
-    <header className="bg-white shadow">
-      <div className="container mx-auto flex items-center justify-between p-4">
-        <Link href="/">
-          <span className="text-2xl font-bold">CoffeeShop</span>
+    <header>
+      <div className="container">
+        {/* Logo */}
+        <Link href="/" className="logo">
+          ☕ CoffeeShop
         </Link>
-        <nav className="space-x-4">
-          <Link href="/menu" className="hover:text-gray-700">
+
+        {/* Nav links */}
+        <nav className="space-x-6">
+          <Link href="/menu" className="nav-link">
             Menu
           </Link>
-          <Link href="/admin/menu_items" className="hover:text-gray-700">
+          <Link href="/admin/menu_items" className="nav-link">
             Admin
           </Link>
         </nav>

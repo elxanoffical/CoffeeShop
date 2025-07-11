@@ -1,4 +1,5 @@
 // app/layout.jsx
+import '../app/globals.css'; 
 import Navbar from '@/components/navBar'
 
 export const metadata = {
@@ -11,10 +12,10 @@ export default function RootLayout({ children }) {
     <html lang="az">
       <body className="min-h-screen flex flex-col">
         <Navbar />
-        <main className="flex-grow container mx-auto p-4">
+        <main className="flex-grow container mx-auto px-4 py-6">
           {children}
         </main>
-        <footer className="text-center p-4">
+        <footer>
           © {new Date().getFullYear()} CoffeeShop
         </footer>
       </body>

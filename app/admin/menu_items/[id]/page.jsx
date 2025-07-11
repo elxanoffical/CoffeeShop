@@ -1,5 +1,5 @@
 // app/admin/menu_items/[id]/page.jsx
-import MenuItemForm from '../../../../components/MenuItemForm'
+import MenuItemForm from '../../../../components/menuItemForm'
 import { supabase } from '../../../../lib/supabaseClient'
 
 export default async function EditMenuItemPage({ params }) {
