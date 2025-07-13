@@ -1,23 +1,13 @@
-// components/QRCodeMenu.jsx
-'use client'
-import QRCode from 'react-qr-code'
+// components/QRCodeMenu.jsx (və ya .js)
+"use client"
+import dynamic from "next/dynamic"
+
+const QRCode = dynamic(() => import("react-qr-code"), { ssr: false })
 
 export default function QRCodeMenu() {
-  const url = typeof window !== 'undefined' ? window.location.href : ''
-
   return (
-    <div className="
-      bg-white 
-      p-4 
-      rounded-lg 
-      shadow-md 
-      mt-12 
-      inline-block
-    ">
-      <QRCode value={url} size={128} />
-      <p className="mt-2 text-center text-sm text-gray-700">
-        Scan to view on your phone
-      </p>
+    <div className="bg-white p-4 rounded shadow">
+      <QRCode value="http://localhost:3000/menu" size={128} />
     </div>
   )
 }

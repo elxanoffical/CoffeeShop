@@ -1,29 +1,23 @@
 'use client'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabaseClient'  // ← client-only
 
 export default function NavBar() {
-  const [role, setRole] = useState(null)
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return
-      supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-        .then(({ data }) => setRole(data?.role))
-    })
-  }, [])
+    // Sadə şəkildə cookie-yə bax
+    if (typeof document !== "undefined") {
+      setIsAdmin(document.cookie.includes('admin_token=1'));
+    }
+  }, []);
 
   return (
     <header className="container flex items-center justify-between p-4">
       <Link href="/" className="logo">☕ CoffeeShop</Link>
       <nav className="space-x-6">
         <Link href="/menu" className="nav-link">Menu</Link>
-        {role === 'admin' && (
+        {isAdmin && (
           <Link href="/admin/menu_items" className="nav-link">Admin</Link>
         )}
       </nav>

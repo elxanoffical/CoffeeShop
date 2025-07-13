@@ -1,12 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // ... mövcud konfiqurasiyan varsa buraya yazılıbsa saxla
   images: {
-    domains: [
-      // Supabase layihə URL-inin hostname hissəsi
-      'jpcpmswtudzkmqwzrgdf.supabase.co'
-    ],
-  },
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'dqjdiwbccnakimxezkhn.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/images/**'
+      }
+    ]
+  }
 }
 
 export default nextConfig;

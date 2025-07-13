@@ -2,7 +2,7 @@
 'use client'
 import Image from 'next/image'
 
-export default function MenuItemCard({ item, onOrder }) {
+export default function MenuItemCard({item, onOrder }) {
   return (
     <div className="
       bg-white 

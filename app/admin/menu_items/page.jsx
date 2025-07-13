@@ -1,8 +1,11 @@
-// app/admin/menu_items/page.jsx
 import Link from 'next/link'
-import { supabase } from '../../../lib/supabaseClient'
+import { cookies } from 'next/headers'
+import { createServerSupabase } from '@/lib/supabaseServerClient'
 
 export default async function AdminMenuItemsPage() {
+  const cookieStore = await cookies()
+  const token = cookieStore.get('admin_token')?.value
+  const supabase = createServerSupabase(token)
   const { data: items, error } = await supabase
     .from('menu_items')
     .select('*')

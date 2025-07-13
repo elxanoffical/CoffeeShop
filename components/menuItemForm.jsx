@@ -1,14 +1,11 @@
-// components/MenuItemForm.jsx
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '../lib/supabaseClient'
 
 export default function MenuItemForm({ initialData }) {
   const router    = useRouter()
   const isEditing = Boolean(initialData)
 
-  // Form sahələri və statuslar
   const [name, setName]             = useState(initialData?.name || '')
   const [description, setDescription] = useState(initialData?.description || '')
   const [price, setPrice]           = useState(initialData?.price || '')
@@ -16,9 +13,23 @@ export default function MenuItemForm({ initialData }) {
   const [loading, setLoading]       = useState(false)
   const [errorMsg, setErrorMsg]     = useState('')
 
-  // Fayl seçiləndə state-ə yazırıq
   const handleFileChange = (e) => {
     setFile(e.target.files[0] ?? null)
+  }
+
+  // SSR API route ilə storage upload
+  const uploadImage = async (file) => {
+    const fileName = `menu_items/${Date.now()}.${file.name.split('.').pop()}`
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('fileName', fileName)
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    })
+    const data = await res.json()
+    if (res.ok) return data.url
+    else throw new Error(data.error)
   }
 
   const handleSubmit = async (e) => {
@@ -26,73 +37,39 @@ export default function MenuItemForm({ initialData }) {
     setLoading(true)
     setErrorMsg('')
 
-    // Əvvəlki image URL-i götür, yoxdursa null
     let imageUrl = initialData?.image || null
 
-    // Yeni fayl seçilibsə, onu Storage bucket-a yüklə
     if (file) {
-      const fileExt  = file.name.split('.').pop()
-      const fileName = `${Date.now()}.${fileExt}`
-      const filePath = `menu_items/${fileName}`
-
-      const { error: uploadError } = await supabase
-        .storage
-        .from('images')                   // bucket adı: 'images'
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        })
-
-      if (uploadError) {
-        setErrorMsg(uploadError.message)
+      try {
+        imageUrl = await uploadImage(file)
+      } catch (err) {
+        setErrorMsg("Şəkil yüklənmədi: " + err.message)
         setLoading(false)
         return
       }
-
-      // Public URL al
-      const { data } = supabase
-        .storage
-        .from('images')
-        .getPublicUrl(filePath)
-
-      imageUrl = data.publicUrl
     }
 
-    // DB-yə insert/update üçün payload
+    // DB insert SSR API-yə POST
     const payload = {
       name,
       description,
       image: imageUrl,
       price: parseFloat(price)
     }
+    const res = await fetch('/api/menu_items', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
 
-    // Update yoxsa Insert?
-    if (isEditing) {
-      const { error: upErr } = await supabase
-        .from('menu_items')
-        .update(payload)
-        .eq('id', initialData.id)
-
-      if (upErr) {
-        setErrorMsg(upErr.message)
-        setLoading(false)
-        return
-      }
+    if (res.ok) {
+      setLoading(false)
+      router.push('/admin/menu_items')
     } else {
-      const { error: insErr } = await supabase
-        .from('menu_items')
-        .insert([payload])
-
-      if (insErr) {
-        setErrorMsg(insErr.message)
-        setLoading(false)
-        return
-      }
+      const err = await res.json()
+      setErrorMsg(err.error)
+      setLoading(false)
     }
-
-    // Uğurla tamamlandı → admin səhifəsinə yönləndir
-    setLoading(false)
-    router.push('/admin/menu_items')
   }
 
   return (
@@ -108,7 +85,6 @@ export default function MenuItemForm({ initialData }) {
         space-y-6
       "
     >
-      {/* Supabase xətalarını göstər */}
       {errorMsg && (
         <p className="text-sm text-red-600">{errorMsg}</p>
       )}
@@ -172,6 +148,7 @@ export default function MenuItemForm({ initialData }) {
             hover:file:bg-[var(--coffee-dark)]
           "
         />
+        {file && <span className="ml-2">{file.name}</span>}
       </div>
 
       {/* Price */}

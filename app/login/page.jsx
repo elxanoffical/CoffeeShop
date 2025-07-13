@@ -1,21 +1,25 @@
-// app/login/page.jsx
 'use client'
-import { useState } from 'react';
-import { supabase } from '../../lib/supabaseClient';
+import { useState } from 'react'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-    setError(error?.message || '');
-  };
+    e.preventDefault()
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
+    if (res.ok) {
+      // SSR cookie üçün hard redirect et
+      window.location.href = '/admin/menu_items'
+    } else {
+      setError('Email və ya şifrə səhvdir və ya email təsdiqlənməyib!')
+    }
+  }
 
   return (
     <form onSubmit={handleLogin} className="max-w-sm mx-auto p-6 space-y-4">
@@ -40,5 +44,5 @@ export default function LoginPage() {
         Log in
       </button>
     </form>
-  );
+  )
 }
