@@ -14,7 +14,6 @@ export default function LoginPage() {
       body: JSON.stringify({ email, password }),
     })
     if (res.ok) {
-      // SSR cookie üçün hard redirect et
       window.location.href = '/admin/menu_items'
     } else {
       setError('Email və ya şifrə səhvdir və ya email təsdiqlənməyib!')
@@ -22,27 +21,52 @@ export default function LoginPage() {
   }
 
   return (
-    <form onSubmit={handleLogin} className="max-w-sm mx-auto p-6 space-y-4">
-      {error && <p className="text-red-500">{error}</p>}
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={e => setEmail(e.target.value)}
-        required
-        className="w-full border px-3 py-2"
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={e => setPassword(e.target.value)}
-        required
-        className="w-full border px-3 py-2"
-      />
-      <button type="submit" className="w-full bg-brown text-cream py-2 rounded">
-        Log in
-      </button>
-    </form>
+    <div className="min-h-screen flex items-center justify-center bg-[var(--coffee-cream)]">
+      <form
+        onSubmit={handleLogin}
+        className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-sm space-y-6"
+      >
+        <h2 className="text-2xl font-semibold text-[var(--coffee-dark)] text-center">
+          Admin Panelə Daxil Ol
+        </h2>
+        {error && (
+          <p className="text-sm text-red-600 bg-red-100 p-2 rounded">
+            {error}
+          </p>
+        )}
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-[var(--coffee-dark)]">
+            Email
+          </label>
+          <input
+            type="email"
+            placeholder="your@example.com"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--coffee-brown)]"
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-[var(--coffee-dark)]">
+            Password
+          </label>
+          <input
+            type="password"
+            placeholder="••••••••"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--coffee-brown)]"
+          />
+        </div>
+        <button
+          type="submit"
+          className="w-full py-3 rounded-lg bg-[var(--coffee-brown)] text-[var(--coffee-cream)] font-medium hover:bg-[var(--coffee-dark)] transition-colors"
+        >
+          Daxil Ol
+        </button>
+      </form>
+    </div>
   )
 }
