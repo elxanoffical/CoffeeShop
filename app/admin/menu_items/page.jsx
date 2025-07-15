@@ -1,17 +1,15 @@
-// app/admin/menu_items/page.jsx   (Server Component)
-import { cookies, redirect } from 'next/headers'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabaseServerClient'
-import AdminMenuItemsClient from './AdminMenuItemsClient'
+import AdminMenuItems from './AdminMenuItems'
 
 export default async function AdminMenuItemsPage() {
-  // 1) Serverdə cookie-dən tokeni götürürük
-  const cookieStore = cookies()
+  // 1) Token yoxlanışı
+  const cookieStore = await cookies()
   const token = cookieStore.get('admin_token')?.value
-
-  // 2) Əgər token yoxdursa, login səhifəsinə yönləndir
   if (!token) redirect('/login')
 
-  // 3) Supabase server-klienti ilə data çək
+  // 2) İlkin datanı service-role client ilə çək
   const supabase = createServerSupabase(token)
   const { data: items, error } = await supabase
     .from('menu_items')
@@ -19,9 +17,9 @@ export default async function AdminMenuItemsPage() {
     .order('created_at', { ascending: false })
 
   if (error) {
-    return <p className="text-red-500">Error loading items</p>
+    return <p className="text-red-500">Error loading items: {error.message}</p>
   }
 
-  // 4) UI-ni client komponentə ötür
-  return <AdminMenuItemsClient initialItems={items} />
+  // 3) Client component-ə ötür
+  return <AdminMenuItems items={items} />
 }

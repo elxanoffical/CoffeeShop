@@ -1,191 +1,130 @@
 'use client'
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function MenuItemForm({ initialData }) {
-  const router    = useRouter()
+  const router = useRouter()
   const isEditing = Boolean(initialData)
 
-  const [name, setName]             = useState(initialData?.name || '')
+  const [name, setName]           = useState(initialData?.name || '')
   const [description, setDescription] = useState(initialData?.description || '')
-  const [price, setPrice]           = useState(initialData?.price || '')
-  const [file, setFile]             = useState(null)
-  const [loading, setLoading]       = useState(false)
-  const [errorMsg, setErrorMsg]     = useState('')
+  const [price, setPrice]         = useState(initialData?.price || '')
+  const [category, setCategory]   = useState(initialData?.category || 'hot')
+  const [imageFile, setImageFile] = useState(null)
+  const [imageUrl, setImageUrl]   = useState(initialData?.image || '')
+  const [error, setError]         = useState('')
 
   const handleFileChange = (e) => {
-    setFile(e.target.files[0] ?? null)
-  }
-
-  // SSR API route ilə storage upload
-  const uploadImage = async (file) => {
-    const fileName = `menu_items/${Date.now()}.${file.name.split('.').pop()}`
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('fileName', fileName)
-    const res = await fetch('/api/upload', {
-      method: 'POST',
-      body: formData,
-    })
-    const data = await res.json()
-    if (res.ok) return data.url
-    else throw new Error(data.error)
+    setImageFile(e.target.files[0] ?? null)
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
-    setErrorMsg('')
+    setError('')
 
-    let imageUrl = initialData?.image || null
+    let finalImageUrl = imageUrl
+    if (imageFile) {
+      const formData = new FormData()
+      formData.append('file', imageFile)
 
-    if (file) {
-      try {
-        imageUrl = await uploadImage(file)
-      } catch (err) {
-        setErrorMsg("Şəkil yüklənmədi: " + err.message)
-        setLoading(false)
+      // upload route-da image yükləyir
+      const uploadRes = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      const uploadData = await uploadRes.json()
+      if (!uploadRes.ok) {
+        setError(uploadData.error || 'Upload xətası')
         return
       }
+      finalImageUrl = uploadData.publicUrl
     }
 
-    // DB insert SSR API-yə POST
     const payload = {
       name,
       description,
-      image: imageUrl,
-      price: parseFloat(price)
+      price: parseFloat(price),
+      category,
+      image: finalImageUrl,
     }
-    const res = await fetch('/api/menu_items', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
 
-    if (res.ok) {
-      setLoading(false)
-      router.push('/admin/menu_items')
-    } else {
-      const err = await res.json()
-      setErrorMsg(err.error)
-      setLoading(false)
+    const url    = isEditing
+      ? `/api/menu_items/${initialData.id}`
+      : '/api/menu_items'
+    const method = isEditing ? 'PATCH' : 'POST'
+
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      setError(data.error || 'Yadda saxlanmadı')
+      return
     }
+
+    // uğurlu olduqda siyahıya dön
+    router.push('/admin/menu_items')
   }
 
   return (
-    <form 
-      onSubmit={handleSubmit}
-      className="
-        bg-white 
-        p-6 
-        rounded-lg 
-        shadow-md 
-        max-w-md 
-        mx-auto 
-        space-y-6
-      "
-    >
-      {errorMsg && (
-        <p className="text-sm text-red-600">{errorMsg}</p>
-      )}
+    <form onSubmit={handleSubmit} className="max-w-md mx-auto p-6 space-y-4 bg-white rounded shadow">
+      {error && <p className="text-red-500">{error}</p>}
 
-      {/* Name */}
       <div>
-        <label className="block text-sm font-medium text-[var(--coffee-dark)] mb-1">
-          Name
-        </label>
+        <label>Name</label>
         <input
           type="text"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={e => setName(e.target.value)}
           required
-          className="
-            block w-full 
-            border rounded 
-            px-3 py-2 
-            focus:outline-none 
-            focus:ring-2 
-            focus:ring-[var(--coffee-brown)]
-          "
+          className="w-full border p-2"
         />
       </div>
 
-      {/* Description */}
       <div>
-        <label className="block text-sm font-medium text-[var(--coffee-dark)] mb-1">
-          Description
-        </label>
+        <label>Description</label>
         <textarea
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="
-            block w-full 
-            border rounded 
-            px-3 py-2 
-            focus:outline-none 
-            focus:ring-2 
-            focus:ring-[var(--coffee-brown)]
-          "
+          onChange={e => setDescription(e.target.value)}
+          className="w-full border p-2"
         />
       </div>
 
-      {/* Image Upload */}
       <div>
-        <label className="block text-sm font-medium text-[var(--coffee-dark)] mb-1">
-          Image
-        </label>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          className="
-            block w-full 
-            text-sm text-gray-700 
-            file:mr-4 file:py-2 file:px-4 
-            file:rounded file:border-0 
-            file:text-sm file:font-semibold 
-            file:bg-[var(--coffee-brown)] file:text-[var(--coffee-cream)] 
-            hover:file:bg-[var(--coffee-dark)]
-          "
-        />
-        {file && <span className="ml-2">{file.name}</span>}
+        <label>Category</label>
+        <select
+          value={category}
+          onChange={e => setCategory(e.target.value)}
+          className="w-full border p-2"
+        >
+          <option value="hot">Hot Drinks</option>
+          <option value="cold">Cold Drinks</option>
+        </select>
       </div>
 
-      {/* Price */}
       <div>
-        <label className="block text-sm font-medium text-[var(--coffee-dark)] mb-1">
-          Price
-        </label>
+        <label>Image</label>
+        <input type="file" accept="image/*" onChange={handleFileChange} />
+      </div>
+
+      <div>
+        <label>Price</label>
         <input
           type="number"
           step="0.01"
           value={price}
-          onChange={(e) => setPrice(e.target.value)}
+          onChange={e => setPrice(e.target.value)}
           required
-          className="
-            block w-full 
-            border rounded 
-            px-3 py-2 
-            focus:outline-none 
-            focus:ring-2 
-            focus:ring-[var(--coffee-brown)]
-          "
+          className="w-full border p-2"
         />
       </div>
 
-      {/* Submit */}
       <button
         type="submit"
-        disabled={loading}
-        className="
-          w-full 
-          px-4 py-2 
-          bg-[var(--coffee-brown)] 
-          text-[var(--coffee-cream)] 
-          rounded 
-          hover:bg-[var(--coffee-dark)] 
-          transition-colors duration-200
-        "
+        className="w-full bg-[var(--coffee-brown)] text-[var(--coffee-cream)] p-2 rounded hover:bg-[var(--coffee-dark)]"
       >
         {isEditing ? 'Update Item' : 'Create Item'}
       </button>
