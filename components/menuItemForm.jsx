@@ -15,6 +15,7 @@ export default function MenuItemForm({ initialData }) {
   const [imageUrl, setImageUrl]   = useState(initialData?.image || '')
   const [error, setError]         = useState('')
 
+
   const handleFileChange = (e) => {
     setImageFile(e.target.files[0] ?? null)
   }
@@ -22,11 +23,14 @@ export default function MenuItemForm({ initialData }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    const fileName = `${Date.now()}`
 
     let finalImageUrl = imageUrl
     if (imageFile) {
       const formData = new FormData()
       formData.append('file', imageFile)
+
+      formData.append('fileName', fileName)
 
       // upload route-da image yükləyir
       const uploadRes = await fetch('/api/upload', {
@@ -34,6 +38,7 @@ export default function MenuItemForm({ initialData }) {
         body: formData,
       })
       const uploadData = await uploadRes.json()
+      
       if (!uploadRes.ok) {
         setError(uploadData.error || 'Upload xətası')
         return
@@ -47,6 +52,7 @@ export default function MenuItemForm({ initialData }) {
       price: parseFloat(price),
       category,
       image: finalImageUrl,
+      
     }
 
     const url    = isEditing

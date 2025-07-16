@@ -1,5 +1,5 @@
 // app/admin/menu_items/new/page.jsx
-import MenuItemForm from '@/components/MenuItemForm'
+import MenuItemForm from '@/components/menuItemForm'
 
 export default function NewMenuItemPage() {
   return (

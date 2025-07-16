@@ -1,35 +1,53 @@
 // app/api/upload/route.js
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import { createServerSupabase } from '@/lib/supabaseServerClient'
+import { cookies } from 'next/headers'
 
-export async function POST(req) {
+export async function POST(request) {
+  // 1) SSR‑də cookie‑dən admin tokeni oxu (əgər Storage policy RLS‑ə bağlıdırsa)
   const cookieStore = await cookies()
   const token = cookieStore.get('admin_token')?.value
+
+  // 2) Service‑role açarı ilə Supabase client yarad
   const supabase = createServerSupabase(token)
 
-  const formData = await req.formData()
+  // 3) FormData-dan faylı götür
+  const formData = await request.formData()
   const file = formData.get('file')
-  const fileName = formData.get('fileName')
+  const fileName = formData.get('fileName') || (file?.name ?? '')
 
-  if (!file || !fileName) {
-    return NextResponse.json({ error: 'Fayl və ya adı göndərilməyib' }, { status: 400 })
+  if (!file || !(file instanceof Blob)) {
+    return NextResponse.json(
+      { error: 'Heç bir fayl göndərilməyib.' },
+      { status: 400 }
+    )
   }
 
-  const { error } = await supabase
+  // 4) Unikal yol yarat
+  const ext = fileName.split('.').pop()
+  const path = `menu_items/${Date.now()}.${ext}`
+
+  // 5) Faylı Storage‑a upload et
+  const { error: uploadError } = await supabase
     .storage
     .from('images')
-    .upload(fileName, file, { upsert: false })
+    .upload(path, file, {
+      cacheControl: '3600',
+      upsert: false
+    })
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 })
+  if (uploadError) {
+    return NextResponse.json(
+      { error: uploadError.message },
+      { status: 500 }
+    )
   }
 
-  // Public URL qaytar
+  // 6) Public URL al və qaytar
   const { data } = supabase
     .storage
     .from('images')
-    .getPublicUrl(fileName)
+    .getPublicUrl(path)
 
-  return NextResponse.json({ url: data.publicUrl })
+  return NextResponse.json({ publicUrl: data.publicUrl })
 }
